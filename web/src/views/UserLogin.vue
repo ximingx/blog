@@ -6,7 +6,7 @@
       <input type="text" placeholder="用户名" id="name" autocapitalize="off" v-model.trim=username aria-autocomplete="off">
       <label for="password"><i class="el-icon-right" style="color: #c1c1c1"></i></label>
       <input type="password" placeholder="密码" id="password" autocapitalize="off" v-model.trim="password">
-      <p ref="message" class="err-text">{{ text }}</p>
+      <p class="err-text">{{ text }}</p>
       <div>
         <el-button type="primary" v-on:click="inputInfo">登录</el-button>
         <el-button type="info"  @click="open2" v-on:click="resetInfo">重置</el-button>
@@ -53,7 +53,7 @@ export default {
       }).then(res => {
         if (res.status == 200) {
           this.$router.push({
-            path: '/home'
+            path: '/index'
           })
         } else {
           this.text = "用户名或密码错误"
