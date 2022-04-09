@@ -1,22 +1,43 @@
 <template>
   <div class="all">
+
     <div class="left">
       <PublicSource></PublicSource>
     </div>
+
     <div class="right">
-      <div class="top"></div>
-      <div class="main"></div>
-      <div class="bottom"></div>
+      <div class="message">
+        <div class="top">
+          <HeaderTop></HeaderTop>
+        </div>
+        <div class="main">
+         <div class="box">
+           <MainHead></MainHead>
+           <MainBody></MainBody>
+         </div>
+          <div class="show">
+
+          </div>
+        </div>
+        <div class="bottom"></div>
+      </div>
+
     </div>
   </div>
 </template>
 
 <script>
-import PublicSource from './PublicSource.vue'
+import PublicSource from "./HomeIndex/PublicSource.vue";
+import HeaderTop from "./HomeIndex/HeaderTop.vue";
+import MainHead from "./HomeIndex/MainHead";
+import MainBody from "./HomeIndex/MainBody";
 export default {
   name: "HomeIndex",
   components: {
-    PublicSource
+    PublicSource,
+    HeaderTop,
+    MainBody,
+    MainHead
   },
 }
 </script>
@@ -47,24 +68,33 @@ export default {
   flex-direction: column;
   overflow-y: auto;
 
-  .top {
-    width: 100%;
-    height: 60px;
-    background: $background_header;
-  }
-
-  .main {
+  .message {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: $background;
+    flex-direction: row;
+
+    .top {
+      width: 100%;
+      height: 60px;
+      background: $background_header;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      background: $background;
+      flex-direction: column;
+    }
+
+    .bottom {
+      width: 100%;
+      height: 40px;
+      background: $background;
+      border-top: 1px $hr-color solid;
+    }
   }
 
-  .bottom {
-    width: 100%;
-    height: 60px;
-    background: $background;
-    border-top: 1px $hr-color solid;
+  .especial {
+  //  固定定位
   }
 
 }

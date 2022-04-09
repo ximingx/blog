@@ -1,6 +1,8 @@
-const express = require('express')
-const { userLogin } = require('../db/user')
-const router = express.Router()
+const express = require('express');
+const { userLogin } = require('../db/user');
+const { getPublic,readFile,isFile } =require("../bin/ximingx_fs")
+const router = express.Router();
+const path = require('path');
 
 // 登录
 router.post('/api/user/login', (req, res) => {
@@ -26,11 +28,11 @@ router.post('/api/user/login', (req, res) => {
 
 // 资源
 router.get('/api/public/source', (req, res) => {
-  res.json([
+  res.send([
     {
       id: 1,
-      name: "aw",
-      type: "dir"
+      name: "public",
+      type: "file",
     }
   ])
 })
