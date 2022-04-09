@@ -2,11 +2,10 @@
   <div id="login">
     <div id="login-form" @keyup.enter="inputInfo">
       <h1>登陆界面</h1>
-      <label for="name"><i class="el-icon-user-solid" style="color: #c1c1c1"></i></label>
-      <input type="text" placeholder="用户名" id="name" autocapitalize="off" v-model.trim=username aria-autocomplete="off">
+      <label for="username"><i class="el-icon-user-solid" style="color: #c1c1c1"></i></label>
+      <input type="text" placeholder="用户名" name="username" id="username" autocapitalize="off" v-model.trim=username aria-autocomplete="off">
       <label for="password"><i class="el-icon-right" style="color: #c1c1c1"></i></label>
-      <input type="password" placeholder="密码" id="password" autocapitalize="off" v-model.trim="password">
-      <p class="err-text">{{ text }}</p>
+      <input type="password" placeholder="密码" name="password" id="password" autocapitalize="off" v-model.trim="password">
       <div>
         <el-button type="primary" v-on:click="inputInfo">登录</el-button>
         <el-button type="info"  @click="open2" v-on:click="resetInfo">重置</el-button>
@@ -27,22 +26,10 @@ export default {
     return {
       username: '',
       password: '',
-      text: '',
-      isShow: false
     }
   },
   methods: {
     inputInfo: function () {
-      if (this.username == '') {
-        this.isShow = true
-        this.text = "用户名不能为空"
-        return
-      }
-      if (this.password == '') {
-        this.isShow = true
-        this.text = "密码不能为空"
-        return
-      }
       request({
         url: '/user/login',
         method: 'POST',
@@ -52,16 +39,27 @@ export default {
         }
       }).then(res => {
         if (res.status == 200) {
+          ElNotification({
+            title: 'Success',
+            message: '登录成功',
+            type: 'success',
+          });
           this.$router.push({
             path: '/index'
           })
         } else {
-          this.text = "用户名或密码错误"
-          this.isShow = true
+          ElNotification({
+            title: 'Error',
+            message: '用户名或者密码错误',
+            type: 'error',
+          });
         }
       }).catch(res => {
-        this.text = "用户名或密码错误"
-        this.isShow = true
+        ElNotification({
+          title: 'Error',
+          message: '用户名或者密码错误',
+          type: 'error',
+        });
       })
     },
     resetInfo: function () {

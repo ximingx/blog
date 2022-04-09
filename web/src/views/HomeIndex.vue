@@ -1,6 +1,8 @@
 <template>
   <div class="all">
-    <div class="left"></div>
+    <div class="left">
+      <PublicSource></PublicSource>
+    </div>
     <div class="right">
       <div class="top"></div>
       <div class="main"></div>
@@ -10,8 +12,12 @@
 </template>
 
 <script>
+import PublicSource from './PublicSource.vue'
 export default {
-  name: "HomeIndex"
+  name: "HomeIndex",
+  components: {
+    PublicSource
+  },
 }
 </script>
 
@@ -20,14 +26,14 @@ export default {
 .all {
   width: 100vw;
   height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
   display: flex;
   background: $background;
-  z-index: -1;
 }
 
 .left {
   width: 220px;
+  max-width: 20vw;
   height: 100vh;
   box-sizing: border-box;
   border-right: 1px $hr-color solid;

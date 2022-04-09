@@ -1,14 +1,11 @@
-// 1. 导入 express
 const express = require('express')
-const user = require("./db/user");
-// 2. 创建路由对象
+const { userLogin } = require('../db/user')
 const router = express.Router()
-// 3. 挂载路由
-const app = express();
 
-app.post('/api/user/login', (req, res) => {
+// 登录
+router.post('/api/user/login', (req, res) => {
   const { username, password } = req.query;
-  user.userLogin(username, password).then(data => {
+  userLogin(username, password).then(data => {
     if (data.length === 0) {
       res.status(500).end({
         message: 'Login Error',
@@ -26,6 +23,17 @@ app.post('/api/user/login', (req, res) => {
     })
   })
 });
+
+// 资源
+router.get('/api/public/source', (req, res) => {
+  res.json([
+    {
+      id: 1,
+      name: "aw",
+      type: "dir"
+    }
+  ])
+})
 
 // 4. 向外导出路由对象
 module.exports = router
