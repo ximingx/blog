@@ -8,7 +8,8 @@ const path = require('path');
 router.post('/api/user/login', (req, res) => {
   const { username, password } = req.query;
   userLogin(username, password).then(data => {
-    if (data.length === 0) {
+    console.log(data)
+    if (data.length == 0) {
       res.status(500).end({
         message: 'Login Error',
         data: data
@@ -20,7 +21,7 @@ router.post('/api/user/login', (req, res) => {
       })
     }
   }).catch(err => {
-    res.send({
+    res.status(500).send({
       message: 'Login Error',
     })
   })

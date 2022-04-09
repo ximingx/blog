@@ -14,10 +14,9 @@ connection.connect(err => {
   console.log("Connected!");
 });
 
-function userLogin(name, password) {
+function userLogin(username, password) {
   return new Promise((resolve, reject) => {
-    connection.query(`SELECT * FROM user WHERE name = '${name}' AND password = '${password}'`, (err, result) => {
-      console.log(result);
+    connection.query(`SELECT * FROM user WHERE username = '${username}' AND password = '${password}'`, (err, result) => {
       if (err) {
         reject(err);
       } else {
