@@ -41,7 +41,7 @@ export default {
         if (res.data.code === 200) {
             ElNotification({
               title: 'Success',
-              message: '登录成功',
+              message: '登录成功 请稍等...',
               type: 'success',
             });
             this.$router.push({
@@ -49,26 +49,10 @@ export default {
             })
         } else {
           ElNotification.error({
-            title: '登录失败',
+            title: '用户名或者密码错误',
             message: res.data.msg
           })
         }
-        // if (res.status == 200) {
-        //   ElNotification({
-        //     title: 'Success',
-        //     message: '登录成功',
-        //     type: 'success',
-        //   });
-        //   this.$router.push({
-        //     path: '/index'
-        //   })
-        // } else {
-        //   ElNotification({
-        //     title: 'Error',
-        //     message: '用户名或者密码错误',
-        //     type: 'error',
-        //   });
-        // }
       }).catch(res => {
         ElNotification({
           title: 'Error',

@@ -21,18 +21,34 @@ export default {
     ElAvatar,
     ElProgress
   },
+  mounted() {
+    this.timer = setTimeout(() => {
+      this.getTime();
+      if (this.percentage === 100) {
+        clearTimeout(this.timer);
+      }
+    }, 1000);
+  },
   data() {
     return {
       circleUrl: require("../../assets/images/avatar.jpg"),
-      percentage: 90
+      percentage: 0,
+      timer: null
+    }
+  },
+  props: {
+    data: {
+      type: Number
     }
   },
   methods: {
-    add() {
-      this.percentage++;
-    },
-    des() {
-      this.percentage--;
+    getTime() {
+      let begin = new Date(2022, 0, 1, 0, 0, 0);
+      let nowTime = new Date();
+      let future = new Date(2022, 5, 7, 9, 0, 0);
+      let timeSum = future.getTime() - nowTime.getTime();
+      let totalTime = future.getTime() - begin.getTime();
+      this.percentage = 100 - Math.floor( timeSum / totalTime * 100);
     }
   }
 }
