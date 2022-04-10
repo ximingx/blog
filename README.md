@@ -50,3 +50,20 @@ $ node app.js
 > **要去搞比赛项目了， 先搁置几天**
 >
 > 哎， 还有中级软考， 还有英语四级考试， 还有两个比赛， 我这该死的只能写文档来吐槽的无奈
+
+### 2022/04/10
+
+啊偶, 今天去见了喜欢的人, 不想学了, 放松会, 写会代码, 当我昨天说了个屁
+
+- 主要是添加了 markdown 的功能 ( v-md-editor )
+- 侧边目录的添加
+- 顶部 添加了部分 样式
+
+![image-20220410124021071](https://raw.githubusercontent.com/ximingx/Figurebed/master/imgs/202204101240190.png)
+
+![image-20220410124145576](https://raw.githubusercontent.com/ximingx/Figurebed/master/imgs/202204101241663.png)
+
+> 明天, 绝对不会写代码了, 要去看课了
+>
+> **有一说一, 等到 `郝彤月` 和 `郝思璐` 小朋友高考完了我也就解放了, `高考倒计时 57 天`**
+
