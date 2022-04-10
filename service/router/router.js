@@ -9,22 +9,18 @@ router.post('/api/user/login', (req, res) => {
   const { username, password } = req.query;
   userLogin(username, password).then(data => {
     console.log(data)
-    if (data.length == 0) {
-      res.status(500).end({
-        message: 'Login Error',
-        data: data
-      })
+    if (data.length) {
+      res.send({
+        code: 200,
+        data: data[0]
+      });
     } else {
-      res.status(200).send({
-        message: 'Login Success',
-        data: data
-      })
+      res.send({
+        code: 400,
+        msg: '用户名或密码错误'
+      });
     }
-  }).catch(err => {
-    res.status(500).send({
-      message: 'Login Error',
-    })
-  })
+  });
 });
 
 // 资源
