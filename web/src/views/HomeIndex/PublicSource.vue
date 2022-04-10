@@ -3,8 +3,8 @@
     <a class="title"> {{ title }} </a>
     <ul v-for="(item, index) in list" :key="index">
       <li>
-        <a href="">
-          <el-icon class="li-item" v-if="item.type === 'dir'"><folder /></el-icon>
+        <a href="{{ item.url }}">
+          <el-icon class="li-item" v-if="isDir(index)"><folder /></el-icon>
           <el-icon class="li-item" v-else><document /></el-icon>
           <span>{{ item.name }}</span>
         </a>
@@ -23,7 +23,7 @@ export default {
   data() {
     return {
       list: [],
-      title: 'ximingx/blog',
+      title: 'ximingx 的资源列表',
       github_url: "https://github.com/ximingx"
     }
   },
@@ -32,18 +32,43 @@ export default {
     Folder,
     Document
   },
+  computed() {
+    return {
+
+    }
+  },
   mounted() {
     request({
       url: "/public/source",
       method: "GET",
       params: {
-        token: this.$store.state.token,
         number: 10,
       }
     }).then(data => {
-      this.list = data.data;
-      console.log(this.list)
+      let arr = []
+      for (let i = 0; i < data.data.length; i++) {
+        if (data.data[i].type == "dir") {
+          arr.unshift({
+            name: data.data[i].name,
+            type: data.data[i].type,
+            path: data.data[i].path
+          })
+        }
+        if (data.data[i].type == "file") {
+          arr.push({
+            name: data.data[i].name,
+            type: data.data[i].type,
+            path: data.data[i].path
+          })
+        }
+      }
+      this.list = JSON.parse(JSON.stringify(arr))
     })
+  },
+  methods: {
+    isDir(index) {
+      return this.list[index].type === 'dir';
+    }
   }
 }
 </script>
@@ -58,7 +83,7 @@ div {
     width: 100%;
     box-sizing: border-box;
     line-height: 60px;
-    color: $font_1;
+    color: $vue;
     position: relative;
     text-align: center;
     text-decoration: none;

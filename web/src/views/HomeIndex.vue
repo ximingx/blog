@@ -15,14 +15,14 @@
            <MainHead></MainHead>
            <MainBody></MainBody>
          </div>
-          <div class="show">
 
-          </div>
         </div>
-        <div class="bottom"></div>
+        <div class="bottom">
+          <BottomIfo></BottomIfo>
+        </div>
       </div>
-
     </div>
+
   </div>
 </template>
 
@@ -31,13 +31,16 @@ import PublicSource from "./HomeIndex/PublicSource.vue";
 import HeaderTop from "./HomeIndex/HeaderTop.vue";
 import MainHead from "./HomeIndex/MainHead";
 import MainBody from "./HomeIndex/MainBody";
+import BottomIfo from "./HomeIndex/BottomIfo";
+
 export default {
   name: "HomeIndex",
   components: {
     PublicSource,
     HeaderTop,
     MainBody,
-    MainHead
+    MainHead,
+    BottomIfo
   },
 }
 </script>
@@ -92,10 +95,5 @@ export default {
       border-top: 1px $hr-color solid;
     }
   }
-
-  .especial {
-  //  固定定位
-  }
-
 }
 </style>

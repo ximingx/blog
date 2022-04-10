@@ -1,5 +1,6 @@
 <template>
   <el-menu
+      id="top-menu"
       class="el-menu-demo"
       mode="horizontal"
       background-color="rgb(22, 27, 34)"
@@ -25,17 +26,18 @@
 
   <div class="art">
     <div class="message">
-
+      <MainMessage></MainMessage>
     </div>
     <div class="show">
-
+      <MainShow></MainShow>
     </div>
   </div>
-
 
 </template>
 
 <script>
+import MainMessage from "./MainBody/MainMessage.vue";
+import MainShow from "./MainBody/MainShow.vue";
 import { ElInput,ElMenu,ElSubMenu,ElMenuItem,ElCollapse,ElCollapseItem } from 'element-plus';
 export default {
   name: "MainBody",
@@ -45,7 +47,9 @@ export default {
     ElSubMenu,
     ElMenuItem,
     ElCollapse,
-    ElCollapseItem
+    ElCollapseItem,
+    MainMessage,
+    MainShow
   },
   data() {
     return {
@@ -81,6 +85,7 @@ export default {
   flex-direction: row;
 
   .message {
+    position: relative;
     flex: 1;
   }
 

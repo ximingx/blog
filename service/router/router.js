@@ -32,9 +32,29 @@ router.get('/api/public/source', (req, res) => {
   res.send([
     {
       id: 1,
-      name: "public",
+      name: "file1",
+      type: "file"
+    },
+    {
+      id: 2,
+      name: "dir1",
+      type: "dir",
+    },
+    {
+      id: 3,
+      name: "file2",
       type: "file",
-    }
+    },
+    {
+      id: 4,
+      name: "dir2",
+      type: "dir",
+    },
+    {
+      id: 2,
+      name: "file5",
+      type: "file",
+    },
   ])
 })
 
