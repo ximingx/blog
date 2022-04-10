@@ -3,7 +3,7 @@ import axios from 'axios'
 export default function (config) {
   return new Promise((resolve, reject) => {
     const instance = axios.create({
-      baseURL: 'http://localhost:3000/api',
+      baseURL: 'http://ximingx.com/api',
       timeout: 10000
     })
 
