@@ -74,6 +74,12 @@ async function syncDirectoryAndDates(localDirPath, remoteHost, remoteUser, remot
 
         console.log('目录同步完成');
 
+        // 删除服务器上的 "posts/私人" 文件夹
+        const remotePrivateFolder = path.posix.join(remotePath, '私人');
+        console.log(`正在删除服务器上的文件夹: ${remotePrivateFolder}`);
+        await executeSSHCommand(sshClient, `rm -rf "${remotePrivateFolder}"`);
+        console.log(`已删除服务器上的文件夹: ${remotePrivateFolder}`);
+
         console.log('重启PM2进程...');
         await executeSSHCommand(sshClient, 'pm2 restart all');
         console.log('PM2进程重启完成');
