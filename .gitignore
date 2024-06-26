@@ -76,3 +76,5 @@ typings/
 
 # IDE / Editor
 .idea
+
+.DS_Store
