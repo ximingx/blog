@@ -20,7 +20,7 @@ schedule.scheduleJob(config.refresh.schedule, async () => {
     try {
         postCache.flushAll();
         await getPosts();
-        if (process.platform === 'linux') return;
+        if (process.platform === 'linux' || config.ssh.remoteHost === '0.0.0.0') return;
         await syncDirectoryAndDates(config.ssh.localPosts, config.ssh.remoteHost, config.ssh.user, config.ssh.remotePath, config.ssh.privateKey);
     } catch (err) {
         logger.error('Scheduled task failed:', err);
@@ -30,7 +30,7 @@ schedule.scheduleJob(config.refresh.schedule, async () => {
 async function initializePosts() {
     try {
         await getPosts();
-        if (process.platform === 'linux') return;
+        if (process.platform === 'linux' || config.ssh.remoteHost === '0.0.0.0') return;
         await syncDirectoryAndDates(config.ssh.localPosts, config.ssh.remoteHost, config.ssh.user, config.ssh.remotePath, config.ssh.privateKey);
     } catch (err) {
         console.error('Error during posts initialization:', err);
