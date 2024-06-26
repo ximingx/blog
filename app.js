@@ -40,11 +40,21 @@ app.use(compression());
 app.use(timeout('60s'));
 
 app.set('view engine', 'ejs');
+
 app.use('/public', express.static('public', {
     maxAge: '1d',
     etag: true,
     lastModified: true
 }));
+app.use('/public/fonts', express.static(path.join(__dirname, 'public', 'fonts'), {
+    maxAge: '30d', // 缓存30天
+    setHeaders: (res, path) => {
+        if (path.endsWith('.woff2') || path.endsWith('.woff') || path.endsWith('.ttf')) {
+            res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30天in秒
+        }
+    }
+}));
+
 app.use('/assets', express.static('posts/assets'))
 
 // 超时错误处理

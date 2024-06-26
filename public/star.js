@@ -18,3 +18,5 @@ function createMeteor() {
 
 setInterval(createMeteor, 300);
 
+loadFont('MyCustomFont', '/public/fonts/customfont.woff2', 'woff2');
+
