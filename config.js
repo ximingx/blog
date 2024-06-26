@@ -16,7 +16,7 @@ module.exports = {
     },
     ssh: {
         localPosts: path.join(__dirname, './posts'),
-        remoteHost: '0.0.0.0',
+        remoteHost: '101.42.249.175',
         user: 'root',
         remotePath: '/root/blog/posts',
         privateKey: '/Users/ximingx/.ssh/id_rsa'
@@ -34,6 +34,6 @@ module.exports = {
         stdTTL: 3600
     },
     refresh: {
-        schedule: '0 0 */1 * * *'
+        schedule: '0 0 0 * * *'
     }
 };

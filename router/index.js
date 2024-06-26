@@ -10,6 +10,7 @@ const NodeCache = require("node-cache");
 const logger = require('../utils/logger');
 const config = require('../config');
 const syncDirectoryAndDates = require('../utils/ssh');
+const chokidar = require('chokidar');
 
 // 缓存机制
 const postCache = new NodeCache({ stdTTL: config.cache.stdTTL });
@@ -21,10 +22,25 @@ schedule.scheduleJob(config.refresh.schedule, async () => {
         postCache.flushAll();
         await getPosts();
         if (process.platform === 'linux' || config.ssh.remoteHost === '0.0.0.0') return;
+        console.log('Start to sync posts...')
         await syncDirectoryAndDates(config.ssh.localPosts, config.ssh.remoteHost, config.ssh.user, config.ssh.remotePath, config.ssh.privateKey);
     } catch (err) {
         logger.error('Scheduled task failed:', err);
     }
+});
+
+let timeoutId;
+
+// 监听 posts 文件夹下的文件改动
+chokidar.watch(config.ssh.localPosts).on('all', (event, path) => {
+    console.log(event, path);
+    // 如果在三分钟内有新的文件改动，清除旧的定时器
+    if (timeoutId) clearTimeout(timeoutId);
+    // 设置新的定时器，在三分钟后执行 syncDirectoryAndDates 事件
+    timeoutId = setTimeout(async () => {
+        console.log('Start to sync posts...')
+        await syncDirectoryAndDates(config.ssh.localPosts, config.ssh.remoteHost, config.ssh.user, config.ssh.remotePath, config.ssh.privateKey);
+    }, 3 * 60 * 1000);  // 3分钟
 });
 
 async function initializePosts() {

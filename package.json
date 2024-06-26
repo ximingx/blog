@@ -15,6 +15,7 @@
   "license": "MIT",
   "dependencies": {
     "archiver": "^7.0.1",
+    "chokidar": "^3.6.0",
     "compression": "^1.7.4",
     "connect-timeout": "^1.9.0",
     "ejs": "^3.1.10",
