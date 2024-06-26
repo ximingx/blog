@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时和</title>
+    <link rel="stylesheet" href="/public/main.css">
+    <link rel="stylesheet" href="/public/index.css">
+    <link rel="icon" href="/public/logo.jpeg">
+    <link rel="stylesheet" href="/public/iconfont.css">
+    <link rel="preload" href="/public/kai.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body>
+
+<%- include('components/header') %>
+
+<main>
+
+    <% posts.forEach(function(post) { %>
+        <a class="article-box" href="/post/<%= post.fileName %>">
+            <article>
+                <h2 class="article-title"><span class="article-title-span"></span><%= post.fileName %></h2>
+                <p class="article-excerpt"><%= post.excerpt %>...</p>
+                <footer>
+                    <div style="display: flex; justify-content: center; align-content: center"><span class="iconfont icon-rili"></span><%= post.date %>
+                    </div>
+                    <% if (post.tags && post.tags.length) { %>
+                        <span class="iconfont icon-lianjie"></span>
+                        <% post.tags.forEach(function(tag) { %>
+                            <span style="margin: 0 10px 0 0"><%= tag %></span>
+                        <% }); %>
+                    <% } %>
+                </footer>
+            </article>
+        </a>
+    <% }); %>
+
+    <div class="pagination">
+        <% if (currentPage > 1) { %>
+            <a href="/?page=<%= currentPage - 1 %>">上一页</a>
+        <% } %>
+
+        <% for (let i = 1; i <= totalPages; i++) { %>
+            <% if (i === currentPage) { %>
+                <span class="current-page"><%= i %></span>
+            <% } else { %>
+                <a href="/?page=<%= i %>"><%= i %></a>
+            <% } %>
+        <% } %>
+
+        <% if (currentPage < totalPages) { %>
+            <a href="/?page=<%= currentPage + 1 %>">下一页</a>
+        <% } %>
+    </div>
+
+    <%- include('components/footer') %>
+</main>
+</body>
+</html>

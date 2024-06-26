@@ -1,0 +1,22 @@
+@font-face {
+  font-family: "iconfont"; /* Project id  */
+  src: url('iconfont.ttf?t=1719281222427') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0 2px 0 6px;
+}
+
+.icon-lianjie:before {
+  content: "\f010b";
+}
+
+.icon-rili:before {
+  content: "\e68b";
+}
+

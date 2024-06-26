@@ -1,0 +1,146 @@
+body {
+    font-family: 'KaiFont', 'sans-serif';
+    color: #ccc;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+header {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-box {
+    width: 60vw;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav a {
+    text-decoration: none;
+    color: #ccc;
+    margin: 0 10px;
+}
+
+nav a:hover {
+    color: #10b981;
+    transition: ease 0.3s;
+}
+
+main {
+    width: 60vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.article-box {
+    width: 100%;
+}
+
+article {
+    width: 100%;
+    margin: 8px 0;
+    padding: 20px 10px;
+    border-radius: 5px;
+}
+
+article:hover {
+    transition: ease 0.5s;
+    border-radius: 5px;
+}
+
+article:hover .article-title {
+    transition: ease 0.5s;
+    color: #10b981;
+}
+
+article:hover .article-title-span {
+    transition: ease 0.5s;
+    width: 150px;
+    border-bottom: 2px solid #10b981;
+}
+
+.article-title {
+    position: relative;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.article-title-span {
+    position: absolute;
+    bottom: -2px;
+    display: flex;
+    width: 40px;
+    border-bottom: 2px solid #000;
+}
+
+.article-excerpt {
+    color: #ccc;
+    letter-spacing: 0.5px;
+}
+
+footer {
+    display: flex;
+    align-content: center;
+    letter-spacing: 0.5px;
+    color: #ccc;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.pagination a, .pagination span {
+    padding: 5px 10px;
+    margin: 0 5px;
+    text-decoration: none;
+    border-radius: 5px;
+    color: #ccc;
+}
+
+.pagination .current-page {
+    background-color: #00de91;
+    color: white;
+}
+
+strong {
+    color: red;
+}
+
+.scroller-style::-webkit-scrollbar {
+    display: none;
+}
+
+.meteor {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #fff;
+    box-shadow: 0 0 10px #fff;
+    animation: meteor linear;
+}
+
+@keyframes meteor {
+    0% {
+        transform: translateX(0) translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-100vw) translateY(100vh);
+        opacity: 0;
+    }
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>归档</title>
+    <link rel="stylesheet" href="/public/main.css">
+    <link rel="stylesheet" href="/public/index.css">
+    <link rel="icon" href="/public/logo.jpeg">
+    <style>
+        .year { margin-top: 30px; }
+        .month { margin-left: 20px; margin-top: 15px; }
+        .post-item { margin-left: 40px; }
+    </style>
+</head>
+<body>
+<%- include('components/header') %>
+<main>
+    <div style="width: 100%">
+        <h1 style="text-align: center">归档</h1>
+        <hr>
+        <%
+        let totalArticles = 0;
+        for(let year in archiveMap) {
+            for(let month in archiveMap[year]) {
+                totalArticles += archiveMap[year][month].length;
+            }
+        }
+        %>
+        <h3>总文章数: <%= totalArticles %></h3>
+        <% for(let year in archiveMap) { %>
+            <div class="year">
+                <h2><%= year %>年</h2>
+                <% for(let month in archiveMap[year]) { %>
+                    <div class="month">
+                        <h3><%= month %>月</h3>
+                        <% archiveMap[year][month].forEach(item => { %>
+                            <div class="post-item">
+                                <a style="color:#ccc;" href="/post/<%= item.fileName %>">
+                                    <%= new Date(item.date).toLocaleDateString('zh-CN', { day: '2-digit' }) %>
+                                    <%= item.title || item.fileName %>
+                                </a>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</main>
+<%- include('components/footer') %>
+</body>
+</html>

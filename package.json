@@ -1,0 +1,32 @@
+{
+  "name": "blog",
+  "version": "1.0.0",
+  "description": "适用于md文件编写的个人博客",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "博客",
+    "node.js",
+    "md"
+  ],
+  "author": "时和",
+  "license": "MIT",
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "compression": "^1.7.4",
+    "connect-timeout": "^1.9.0",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
+    "helmet": "^7.1.0",
+    "markdown-it": "^14.1.0",
+    "node-cache": "^5.1.2",
+    "node-schedule": "^2.1.1",
+    "proper-lockfile": "^4.1.2",
+    "ssh2": "^1.15.0",
+    "ssh2-sftp-client": "^10.0.3",
+    "winston": "^3.13.0"
+  }
+}
