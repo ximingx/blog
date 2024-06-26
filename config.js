@@ -1,4 +1,5 @@
-// config.js
+const path = require('path');
+
 module.exports = {
     server: {
         port: process.env.PORT || 443,
@@ -13,29 +14,26 @@ module.exports = {
             cert: '/etc/nginx/ssl/ximingx.org.cn.crt'
         }
     },
+    ssh: {
+        localPosts: path.join(__dirname, './posts'),
+        remoteHost: '101.42.249.175',
+        user: 'root',
+        remotePath: '/root/blog/posts',
+        privateKey: '/Users/ximingx/.ssh/id_rsa'
+    },
     logging: {
-        dir: './log',
+        dir: path.join(__dirname, 'logs'),
         errorLog: 'error.log',
         combinedLog: 'combined.log'
     },
-    ssh: {
-        remoteDir: '/root/blog/posts',
-        remoteHost: '你的服务器ip地址',
-        remoteUser: 'root',
-        remotePassword: '你的服务器密码',
-    },
-    backup: {
-        fileName: 'posts.zip',
-        metadataFileName: 'file_metadata.json'
-    },
     posts: {
         perPage: 5,
-        directory: './posts'
+        directory: path.join(__dirname, 'posts')
     },
     cache: {
         stdTTL: 3600
     },
-    upload: {
-        schedule: '0 */12 * * *'
+    refresh: {
+        schedule: '0 0 */1 * * *'
     }
 };

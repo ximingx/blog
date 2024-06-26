@@ -6,93 +6,37 @@ const MarkdownIt = require('markdown-it');
 const md = new MarkdownIt();
 const Router = express.Router();
 const schedule = require('node-schedule');
-const {upload} = require('../utils/ssh');
 const NodeCache = require("node-cache");
-const winston = require('winston');
+const logger = require('../utils/logger');
 const config = require('../config');
-const lockfile = require('proper-lockfile');
-
-
-// 设置日志
-const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.printf(({ timestamp, level, message }) => {
-            return `${timestamp} ${level}: ${message}`;
-        })
-    ),
-    transports: [
-        new winston.transports.File({ filename: path.join(config.logging.dir, config.logging.errorLog), level: 'error' }),
-        new winston.transports.File({ filename: path.join(config.logging.dir, config.logging.combinedLog) })
-    ]
-});
-
-if (process.env.NODE_ENV !== 'production') {
-    logger.add(new winston.transports.Console({
-        format: winston.format.simple()
-    }));
-}
+const syncDirectoryAndDates = require('../utils/ssh');
 
 // 缓存机制
 const postCache = new NodeCache({ stdTTL: config.cache.stdTTL });
 
-// 添加锁定机制
-const lockFilePath = path.join(__dirname, '..', 'upload.lock');
-
-async function runWithLock(fn) {
-    let releaseLock = null;
-    try {
-        // 尝试获取锁，设置超时时间为10秒
-        releaseLock = await lockfile.lock(lockFilePath, {
-            retries: {
-                retries: 5,
-                factor: 2,
-                minTimeout: 1000,
-                maxTimeout: 10000,
-            }
-        });
-        logger.info('Lock acquired successfully');
-        await fn();
-    } catch (err) {
-        if (err.code === 'ELOCKED') {
-            logger.error('Backup process failed: Lock file is already being held');
-        } else {
-            logger.error('Error during locked operation:', err);
-        }
-    } finally {
-        if (releaseLock) {
-            try {
-                await releaseLock();
-                logger.info('Lock released successfully');
-            } catch (err) {
-                logger.error('Error unlocking file:', err);
-            }
-        }
-    }
-}
-
-async function initializePosts() {
-    await runWithLock(async () => {
-        await getPosts();
-        await upload();
-    });
-}
-
 initializePosts();
 
-// 修改定时任务，减少执行频率
-schedule.scheduleJob(config.upload.schedule, async () => {
+schedule.scheduleJob(config.refresh.schedule, async () => {
     try {
-        await runWithLock(async () => {
-            postCache.flushAll();
-            await getPosts();
-            await upload();
-        });
+        postCache.flushAll();
+        await getPosts();
+        if (process.platform === 'linux') return;
+        await syncDirectoryAndDates(config.ssh.localPosts, config.ssh.remoteHost, config.ssh.user, config.ssh.remotePath, config.ssh.privateKey);
     } catch (err) {
         logger.error('Scheduled task failed:', err);
     }
 });
+
+async function initializePosts() {
+    try {
+        await getPosts();
+        if (process.platform === 'linux') return;
+        await syncDirectoryAndDates(config.ssh.localPosts, config.ssh.remoteHost, config.ssh.user, config.ssh.remotePath, config.ssh.privateKey);
+    } catch (err) {
+        console.error('Error during posts initialization:', err);
+    }
+    console.log('Posts initialization process completed');
+}
 
 function getPlainTextFromHtml(html) {
     let plainText = html.replace(/<[^>]+>/g, '');

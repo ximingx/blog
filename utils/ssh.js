@@ -1,260 +1,120 @@
-const archiver = require('archiver');
-const fs = require('fs');
-const fsp = require('fs').promises;
+const fs = require('fs').promises;
 const path = require('path');
-const Client = require('ssh2-sftp-client');
+const { Client } = require('node-scp');
 const SSH2Client = require('ssh2').Client;
-const winston = require('winston');
-const { promisify } = require('util');
-const lockfile = require('proper-lockfile');
-const config = require('../config');
 
-// 设置日志记录器
-const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.printf(({ timestamp, level, message }) => {
-            return `${timestamp} ${level}: ${message}`;
-        })
-    ),
-    transports: [
-        new winston.transports.Console(),
-        new winston.transports.File({ filename: path.join(config.logging.dir, config.logging.errorLog), level: 'error' }),
-        new winston.transports.File({ filename: path.join(config.logging.dir, config.logging.combinedLog) }),
-    ],
-});
-
-function formatDateForTouch(isoString) {
-    const date = new Date(isoString);
-    return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-}
-
-async function createZipArchiveWithMetadata(source, out) {
-    const archive = archiver('zip', {zlib: {level: 9}});
-    const stream = fs.createWriteStream(out);
-    const metadata = {};
-
+async function uploadAndSyncRecursive(scpClient, sshClient, localPath, remotePath) {
     try {
-        await collectMetadata(source, metadata);
-        await fsp.writeFile(path.join(source, config.backup.metadataFileName), JSON.stringify(metadata, null, 2));
+        console.log(`Processing: ${localPath} -> ${remotePath}`);
+        const stats = await fs.stat(localPath);
 
-        return new Promise((resolve, reject) => {
-            archive
-                .directory(source, false)
-                .on('error', err => reject(err))
-                .pipe(stream);
-            stream.on('close', () => resolve());
-            archive.finalize();
-        });
-    } catch (err) {
-        logger.error('Error in createZipArchiveWithMetadata:', err);
-        throw err;
-    }
-}
+        if (stats.isDirectory()) {
+            console.log(`Creating directory: ${remotePath}`);
+            await executeSSHCommand(sshClient, `mkdir -p "${remotePath}"`);
 
-async function collectMetadata(dir, metadata) {
-    const files = await fsp.readdir(dir, {withFileTypes: true});
-    for (const file of files) {
-        const fullPath = path.join(dir, file.name);
-        if (file.isDirectory()) {
-            await collectMetadata(fullPath, metadata);
+            const files = await fs.readdir(localPath);
+            for (const file of files) {
+                const localFilePath = path.join(localPath, file);
+                const remoteFilePath = path.join(remotePath, file);
+                await uploadAndSyncRecursive(scpClient, sshClient, localFilePath, remoteFilePath);
+            }
         } else {
-            const stat = await fsp.stat(fullPath);
-            metadata[path.relative(dir, fullPath)] = {
-                mtime: stat.mtime.toISOString()
-            };
+            console.log(`Uploading file: ${localPath} -> ${remotePath}`);
+            await scpClient.uploadFile(localPath, remotePath);
         }
+
+        // 同步日期
+        console.log(`Syncing dates for: ${remotePath}`);
+        await syncDates(sshClient, localPath, remotePath);
+
+    } catch (error) {
+        console.error(`Error processing ${localPath}: ${error.message}`);
+        throw error; // 重新抛出错误以便上层函数可以捕获
     }
 }
 
-function executeRemoteCommand(command, timeout = 30000) {
-    return new Promise((resolve, reject) => {
-        const conn = new SSH2Client();
-        const timer = setTimeout(() => {
-            conn.end();
-            reject(new Error(`Command "${command}" timed out after ${timeout}ms`));
-        }, timeout);
+async function syncDirectoryAndDates(localDirPath, remoteHost, remoteUser, remotePath, privateKey) {
+    let scpClient;
+    let sshClient;
+    try {
+        // 创建SCP客户端
+        scpClient = await Client({
+            host: remoteHost,
+            port: 22,
+            username: remoteUser,
+            privateKey: await fs.readFile(privateKey)
+        });
 
-        conn.on('ready', () => {
-            conn.exec(command, (err, stream) => {
-                if (err) {
-                    clearTimeout(timer);
-                    reject(err);
-                }
-                let output = '';
-                stream.on('close', (code, signal) => {
-                    clearTimeout(timer);
-                    conn.end();
-                    if (code !== 0) {
-                        reject(new Error(`Command "${command}" failed with exit code ${code}: ${output}`));
-                    } else {
-                        resolve(output);
-                    }
-                }).on('data', (data) => {
-                    output += data;
-                }).stderr.on('data', (data) => {
-                    output += data;
-                });
+        // 创建SSH连接
+        sshClient = new SSH2Client();
+        await new Promise(async (resolve, reject) => {
+            sshClient.on('ready', resolve).on('error', reject).connect({
+                host: remoteHost,
+                port: 22,
+                username: remoteUser,
+                privateKey: await fs.readFile(privateKey)
             });
-        }).on('error', (err) => {
-            clearTimeout(timer);
-            reject(err);
-        }).connect({
-            host: config.ssh.remoteHost,
-            username: config.ssh.remoteUser,
-            password: config.ssh.remotePassword
+        });
+
+        // 尝试删除远程目录（如果存在）
+        try {
+            await executeSSHCommand(sshClient, `rm -rf "${remotePath}"`);
+        } catch (error) {
+            // 如果目录不存在，忽略错误
+            if (!error.message.includes('No such file')) {
+                console.warn(`Warning when removing remote directory: ${error.message}`);
+            }
+        }
+
+        // 创建远程目录
+        await executeSSHCommand(sshClient, `mkdir -p "${remotePath}"`);
+
+        // 上传文件并同步日期
+        await uploadAndSyncRecursive(scpClient, sshClient, localDirPath, remotePath);
+
+        console.log('目录同步完成');
+
+        console.log('重启PM2进程...');
+        await executeSSHCommand(sshClient, 'pm2 restart all');
+        console.log('PM2进程重启完成');
+
+    } catch (error) {
+        console.error('操作过程中出错:', error);
+    } finally {
+        // 确保连接被关闭，即使发生错误
+        if (scpClient) await scpClient.close();
+        if (sshClient) sshClient.end();
+    }
+}
+
+async function syncDates(sshClient, localPath, remotePath) {
+    const stats = await fs.stat(localPath);
+    const atime = stats.atime.getTime() / 1000; // 访问时间
+    const mtime = stats.mtime.getTime() / 1000; // 修改时间
+
+    const touchCommand = `touch -a -d @${atime} "${remotePath}" && touch -m -d @${mtime} "${remotePath}"`;
+    await executeSSHCommand(sshClient, touchCommand);
+}
+
+async function executeSSHCommand(sshClient, command) {
+    return new Promise((resolve, reject) => {
+        sshClient.exec(command, (err, stream) => {
+            if (err) reject(err);
+            let stdoutData = "";
+            let stderrData = "";
+            stream.on('close', (code) => {
+                if (code !== 0) {
+                    reject(new Error(`Command failed with code ${code}: ${stderrData}`));
+                } else {
+                    resolve(stdoutData);
+                }
+            }).on('data', (data) => {
+                stdoutData += data;
+            }).stderr.on('data', (data) => {
+                stderrData += data;
+            });
         });
     });
 }
 
-async function uploadToRemoteServer(localFile, remoteFile) {
-    const sftp = new Client();
-
-    try {
-        await sftp.connect({
-            host: config.ssh.remoteHost,
-            username: config.ssh.remoteUser,
-            password: config.ssh.remotePassword
-        });
-
-        await sftp.put(localFile, remoteFile);
-        logger.info('File uploaded successfully');
-
-        const tempDir = `${config.ssh.remoteDir}_temp`;
-        await executeRemoteCommand(`sudo mkdir -p ${tempDir}`);
-        await executeRemoteCommand(`sudo unzip -o ${remoteFile} -d ${tempDir}`);
-        logger.info('File unzipped to temporary directory');
-
-        await executeRemoteCommand(`
-            sudo rm -rf ${config.ssh.remoteDir}/*;
-            sudo mkdir -p ${config.ssh.remoteDir}/公务员 ${config.ssh.remoteDir}/博客;
-            sudo mv ${tempDir}/公务员/* ${config.ssh.remoteDir}/公务员/ 2>/dev/null || true;
-            sudo mv ${tempDir}/博客/* ${config.ssh.remoteDir}/博客/ 2>/dev/null || true;
-        `);
-
-        await executeRemoteCommand(`sudo rm -rf ${tempDir}`);
-        logger.info('Files replaced successfully, only "公务员" and "博客" folders retained');
-
-        const metadataPath = path.join(config.ssh.remoteDir, config.backup.metadataFileName);
-        if (await fileExists(metadataPath)) {
-            const metadataContent = await executeRemoteCommand(`sudo cat ${metadataPath}`);
-            const metadata = JSON.parse(metadataContent);
-            await updateFileTimes(metadata, config.remoteDir);
-            await deleteMetadataFile(metadataPath);
-        }
-
-    } catch (err) {
-        logger.error('Error in uploadToRemoteServer:', err);
-        throw err;
-    } finally {
-        await sftp.end();
-    }
-}
-
-async function fileExists(filePath) {
-    try {
-        await executeRemoteCommand(`sudo test -e ${filePath}`);
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
-
-async function updateFileTimes(metadata, remoteDir) {
-    for (const [filePath, fileMetadata] of Object.entries(metadata)) {
-        const fullPath = path.join(remoteDir, filePath);
-        const timestamp = formatDateForTouch(fileMetadata.mtime);
-        try {
-            await executeRemoteCommand(`sudo touch -m -t ${timestamp} -- "${fullPath}"`);
-            logger.info(`Successfully updated mtime for ${fullPath}`);
-        } catch (error) {
-            logger.error(`Failed to update mtime for ${fullPath}: ${error.message}`);
-        }
-    }
-    logger.info('File modification times restored');
-}
-
-async function deleteMetadataFile(metadataPath) {
-    const metadataExists = await executeRemoteCommand(`sudo test -f ${metadataPath} && echo "exists" || echo "not exists"`);
-    if (metadataExists.trim() === "exists") {
-        await executeRemoteCommand(`sudo rm ${metadataPath}`);
-        logger.info('Metadata file deleted');
-    } else {
-        logger.info('Metadata file does not exist, skipping deletion');
-    }
-}
-
-async function cleanupFiles(localBackupPath, remoteBackupPath) {
-    try {
-        await fsp.unlink(localBackupPath);
-        logger.info('Local backup file deleted');
-    } catch (unlinkError) {
-        logger.error('Failed to delete local backup file:', unlinkError);
-    }
-
-    try {
-        const zipExists = await executeRemoteCommand(`sudo test -f ${remoteBackupPath} && echo "exists" || echo "not exists"`);
-        if (zipExists.trim() === "exists") {
-            await executeRemoteCommand(`sudo rm ${remoteBackupPath}`);
-            logger.info('Remote zip file deleted');
-        } else {
-            logger.info('Remote zip file does not exist, skipping deletion');
-        }
-    } catch (rmError) {
-        logger.error('Failed to delete remote zip file:', rmError);
-    }
-}
-
-async function restartPM2Services() {
-    try {
-        await executeRemoteCommand('pm2 restart all');
-        logger.info('PM2 services restarted');
-    } catch (pm2Error) {
-        logger.error('Failed to restart PM2 services:', pm2Error);
-    }
-}
-
-// 添加重试逻辑的包装函数
-async function withRetry(fn, maxRetries = 3, delay = 1000) {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            return await fn();
-        } catch (error) {
-            if (i === maxRetries - 1) throw error;
-            logger.warn(`Attempt ${i + 1} failed, retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-}
-
-async function upload() {
-    const lockFilePath = path.join(__dirname, '..', 'upload.lock');
-
-    try {
-        await lockfile.lock(lockFilePath, { retries: { retries: 5, minTimeout: 1000 } });
-
-        const backupPath = path.join(__dirname, '..', config.backup.fileName);
-        await createZipArchiveWithMetadata(config.posts.directory, backupPath);
-        logger.info('Backup created with metadata');
-
-        const remoteFile = path.join(config.ssh.remoteDir, config.backup.fileName);
-        await withRetry(() => uploadToRemoteServer(backupPath, remoteFile));
-
-        await cleanupFiles(backupPath, remoteFile);
-        await restartPM2Services();
-
-    } catch (err) {
-        logger.error('Backup process failed:', err);
-    } finally {
-        try {
-            await lockfile.unlock(lockFilePath);
-        } catch (unlockError) {
-            logger.error('Error unlocking file:', unlockError);
-        }
-    }
-}
-
-logger.info('Upload process started');
-
-module.exports = { upload };
+module.exports = syncDirectoryAndDates;
